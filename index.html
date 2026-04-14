@@ -1,0 +1,2835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrachiGen Studio — AI Content Creator Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c26;
+    --border: #2a2a3a;
+    --accent: #ff6b35;
+    --accent2: #ffb347;
+    --accent3: #7c3aed;
+    --text: #f0f0f5;
+    --text2: #9090a8;
+    --success: #22c55e;
+    --error: #ef4444;
+    --gradient: linear-gradient(135deg, #ff6b35, #ffb347);
+    --gradient2: linear-gradient(135deg, #7c3aed, #ff6b35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background effect */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255,107,53,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span {
+    font-weight: 400;
+    font-size: 13px;
+    -webkit-text-fill-color: var(--text2);
+    display: block;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: -4px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .plan-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .plan-badge.free { background: rgba(144,144,168,0.15); color: var(--text2); }
+  .plan-badge.pro { background: var(--gradient); color: white; }
+
+  .btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--gradient);
+    color: white;
+  }
+
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: var(--text2); }
+
+  /* SETUP MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 480px;
+    width: 100%;
+    position: relative;
+  }
+
+  .modal h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .modal p { color: var(--text2); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+
+  .input-group { margin-bottom: 16px; }
+  .input-group label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+
+  .input-group input, .input-group select, .input-group textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .input-group input::placeholder { color: var(--text2); }
+
+  /* MAIN LAYOUT */
+  .app-container {
+    display: flex;
+    min-height: calc(100vh - 64px);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    overflow-y: auto;
+    height: calc(100vh - 64px);
+    position: sticky;
+    top: 64px;
+  }
+
+  .sidebar-section {
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text2);
+    padding: 8px 8px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text2);
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+
+  .nav-item.active {
+    background: rgba(255,107,53,0.12);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+
+  .nav-item .pro-tag {
+    margin-left: auto;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .nav-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 12px;
+  }
+
+  /* MAIN CONTENT */
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px;
+  }
+
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .page-header {
+    margin-bottom: 28px;
+  }
+
+  .page-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .page-header p { color: var(--text2); font-size: 14px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: rgba(255,107,53,0.3); }
+
+  .card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* SELECT PILLS */
+  .pill-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+
+  .pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text2);
+    background: var(--surface2);
+  }
+
+  .pill:hover { border-color: var(--accent); color: var(--accent); }
+  .pill.selected { background: rgba(255,107,53,0.15); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+  /* OUTPUT BOX */
+  .output-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 120px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    position: relative;
+  }
+
+  .output-box.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  .output-placeholder { color: var(--text2); font-style: italic; font-size: 13px; }
+
+  .copy-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* IDEA CARDS */
+  .idea-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .idea-card:hover { border-color: var(--accent); transform: translateX(4px); }
+
+  .idea-card .idea-title { font-weight: 500; font-size: 15px; margin-bottom: 6px; }
+  .idea-card .idea-meta { display: flex; gap: 8px; align-items: center; }
+
+  .badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--success); }
+  .badge-orange { background: rgba(255,107,53,0.15); color: var(--accent); }
+  .badge-purple { background: rgba(124,58,237,0.15); color: #a78bfa; }
+  .badge-yellow { background: rgba(255,179,71,0.15); color: var(--accent2); }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--gradient);
+    transition: width 0.5s ease;
+  }
+
+  /* SCORE CIRCLE */
+  .score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    border: 3px solid;
+    margin: 0 auto 12px;
+  }
+
+  /* THUMBNAIL */
+  .thumbnail-preview {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .thumbnail-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* CALENDAR GRID */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .cal-day {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 6px;
+    font-size: 11px;
+    min-height: 60px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .cal-day:hover { border-color: var(--accent); }
+  .cal-day .day-num { font-weight: 700; color: var(--text2); margin-bottom: 4px; font-size: 12px; }
+  .cal-day .day-content { color: var(--text); font-size: 10px; line-height: 1.3; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 14px;
+    z-index: 9999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s;
+    max-width: 320px;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--success); color: var(--success); }
+  .toast.error { border-color: var(--error); color: var(--error); }
+
+  /* PRO GATE */
+  .pro-gate {
+    text-align: center;
+    padding: 40px 20px;
+    background: var(--surface2);
+    border-radius: 12px;
+    border: 1px dashed var(--border);
+  }
+
+  .pro-gate h3 { font-family: 'Syne', sans-serif; font-size: 20px; margin-bottom: 8px; }
+  .pro-gate p { color: var(--text2); font-size: 14px; margin-bottom: 20px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-card .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
+  }
+
+  .stat-card .stat-label { font-size: 12px; color: var(--text2); }
+
+  /* USAGE COUNTER */
+  .usage-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  .usage-bar .usage-label { color: var(--text2); flex: 1; }
+  .usage-bar .usage-count { font-weight: 600; color: var(--accent); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--surface2); padding: 4px; border-radius: 10px; width: fit-content; }
+
+  .tab {
+    padding: 7px 16px;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+
+  .tab.active { background: var(--surface); color: var(--text); }
+
+  /* PRICING */
+  .pricing-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pricing-card.featured {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(255,107,53,0.05), var(--surface));
+  }
+
+  .pricing-card .price {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    margin: 12px 0;
+  }
+
+  .pricing-card .price span { font-size: 16px; font-weight: 400; color: var(--text2); }
+
+  .pricing-feature { font-size: 13px; color: var(--text2); padding: 6px 0; border-bottom: 1px solid var(--border); text-align: left; display: flex; align-items: center; gap: 8px; }
+  .pricing-feature:last-child { border-bottom: none; }
+  .pricing-feature::before { content: '✓'; color: var(--success); font-weight: 700; }
+
+  /* SCORE METER */
+  .score-meter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .score-label { width: 140px; font-size: 13px; color: var(--text2); }
+  .score-bar { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .score-value { width: 35px; text-align: right; font-size: 13px; font-weight: 600; }
+
+  /* HINGLISH TOGGLE */
+  .toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .toggle-switch input { display: none; }
+
+  .toggle-track {
+    width: 44px;
+    height: 24px;
+    background: var(--surface2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: var(--text2);
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: all 0.2s;
+  }
+
+  input:checked + .toggle-track { background: var(--accent); border-color: var(--accent); }
+  input:checked + .toggle-track::after { left: 22px; background: white; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+  /* MOBILE */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main-content { padding: 16px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .calendar-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  /* DASHBOARD WELCOME */
+  .hero-banner {
+    background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(255,107,53,0.2));
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-banner::before {
+    content: '🎬';
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 80px;
+    opacity: 0.15;
+  }
+
+  .hero-banner h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .hero-banner p { color: var(--text2); font-size: 14px; }
+
+  .quick-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+
+  .quick-btn {
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.2s;
+  }
+
+  .quick-btn:hover { background: rgba(255,107,53,0.2); border-color: var(--accent); }
+
+  /* CREATOR SCORE */
+  .creator-score-display {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .big-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+
+  .score-info h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .score-info p { font-size: 13px; color: var(--text2); }
+
+  /* INPUT AREA */
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .input-row input, .input-row select {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-row input:focus, .input-row select:focus { border-color: var(--accent); }
+  .input-row input::placeholder { color: var(--text2); }
+
+  select option { background: var(--surface2); }
+
+  textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+    width: 100%;
+  }
+
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--text2); }
+
+  /* Per use modal */
+  .per-use-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .per-use-modal h3 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .per-use-modal p { color: var(--text2); font-size: 14px; margin-bottom: 20px; }
+  .per-use-price { font-size: 36px; font-weight: 800; font-family: 'Syne', sans-serif; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 20px; }
+
+  .feature-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    background: rgba(124,58,237,0.15);
+    color: #a78bfa;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="setupModal">
+  <div class="modal">
+    <div style="font-size:36px;margin-bottom:12px;">🎬</div>
+    <h2>Welcome to<br><span style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">PrachiGen Studio</span></h2>
+    <p>India ka pehla Hinglish AI Content Creator Tool. Apni Gemini API key dalo aur shuru karo!</p>
+    <div class="input-group">
+      <label>Gemini API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="AIzaSy..." />
+    </div>
+    <div class="input-group">
+      <label>Apna Naam</label>
+      <input type="text" id="userNameInput" placeholder="Creator ka naam..." />
+    </div>
+    <div class="input-group">
+      <label>Primary Niche</label>
+      <select id="primaryNicheInput">
+        <option value="">Select karo...</option>
+        <option>Gaming</option>
+        <option>Finance & Money</option>
+        <option>Health & Fitness</option>
+        <option>Tech & AI</option>
+        <option>Comedy & Entertainment</option>
+        <option>Education & Learning</option>
+        <option>Food & Cooking</option>
+        <option>Travel & Lifestyle</option>
+        <option>Motivation & Self Help</option>
+        <option>Business & Entrepreneurship</option>
+        <option>Fashion & Beauty</option>
+        <option>Bollywood & Movies</option>
+        <option>News & Current Affairs</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="setupApp()">🚀 Start Karo</button>
+    <p style="font-size:11px;color:var(--text2);text-align:center;margin-top:12px;">API key sirf tere browser mein save hogi — kahi nahi jaegi</p>
+  </div>
+</div>
+
+<!-- PER USE PAYMENT MODAL -->
+<div class="modal-overlay" id="perUseModal" style="display:none;">
+  <div class="per-use-modal">
+    <div style="font-size:40px;margin-bottom:12px;" id="perUseEmoji">⚡</div>
+    <h3 id="perUseTitle">Feature Name</h3>
+    <p id="perUseDesc">Feature description</p>
+    <div class="per-use-price" id="perUsePrice">₹39</div>
+    <button class="btn btn-primary" style="width:100%;padding:14px;margin-bottom:10px;" onclick="initiatePayment('peruse')">💳 Pay & Use Karo</button>
+    <button class="btn btn-ghost" style="width:100%;" onclick="closePerUseModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- PRO UPGRADE MODAL -->
+<div class="modal-overlay" id="proModal" style="display:none;">
+  <div class="modal" style="max-width:600px;">
+    <h2 style="margin-bottom:4px;">🔓 Pro Unlock Karo</h2>
+    <p>Unlimited access to all features</p>
+    <div class="grid-2" style="margin-top:20px;margin-bottom:20px;">
+      <div class="pricing-card">
+        <div style="font-size:13px;color:var(--text2);font-weight:600;">MONTHLY</div>
+        <div class="price">₹149<span>/mo</span></div>
+        <div class="pricing-feature">Unlimited ideas daily</div>
+        <div class="pricing-feature">30-day content calendar</div>
+        <div class="pricing-feature">Hinglish mode</div>
+        <div class="pricing-feature">Flop risk analyzer</div>
+        <div class="pricing-feature">All Pro features</div>
+        <button class="btn btn-secondary" style="width:100%;margin-top:16px;" onclick="initiatePayment('monthly')">Subscribe</button>
+      </div>
+      <div class="pricing-card featured">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);margin-bottom:4px;">BEST VALUE</div>
+        <div style="font-size:13px;font-weight:600;">LIFETIME</div>
+        <div class="price">₹799</div>
+        <div class="pricing-feature">Everything in Monthly</div>
+        <div class="pricing-feature">Lifetime updates</div>
+        <div class="pricing-feature">Priority support</div>
+        <div class="pricing-feature">Future features free</div>
+        <div class="pricing-feature">One time payment</div>
+        <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="initiatePayment('lifetime')">Get Lifetime</button>
+      </div>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;" onclick="document.getElementById('proModal').style.display='none'">Maybe Later</button>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    PrachiGen Studio
+    <span>AI Content Creator</span>
+  </div>
+  <div class="header-right">
+    <label class="toggle-switch" title="Hinglish Mode">
+      <input type="checkbox" id="hinglishToggle" onchange="toggleHinglish()">
+      <div class="toggle-track"></div>
+      <span style="font-size:13px;color:var(--text2);">🇮🇳 Hinglish</span>
+    </label>
+    <span class="plan-badge free" id="planBadge">FREE</span>
+    <button class="btn btn-primary" onclick="document.getElementById('proModal').style.display='flex'" id="upgradeBtn">⚡ Upgrade</button>
+  </div>
+</header>
+
+<div class="app-container">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Main</div>
+      <div class="nav-item active" onclick="showPage('dashboard')">
+        <span class="icon">🏠</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('ideas')">
+        <span class="icon">💡</span> Idea Generator
+      </div>
+      <div class="nav-item" onclick="showPage('hooks')">
+        <span class="icon">🎣</span> Hook Generator
+      </div>
+      <div class="nav-item" onclick="showPage('captions')">
+        <span class="icon">✍️</span> Caption Generator
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Pro Features</div>
+      <div class="nav-item" onclick="showPage('calendar')">
+        <span class="icon">📅</span> 30-Day Calendar
+        <span class="pro-tag">PRO</span>
+      </div>
+      <div class="nav-item" onclick="showPage('flop')">
+        <span class="icon">📊</span> Flop Analyzer
+        <span class="pro-tag">PRO</span>
+      </div>
+      <div class="nav-item" onclick="showPage('shorts')">
+        <span class="icon">📱</span> Shorts→Reels
+        <span class="pro-tag">PRO</span>
+      </div>
+      <div class="nav-item" onclick="showPage('trends')">
+        <span class="icon">🔥</span> Trend Ideas
+        <span class="pro-tag">PRO</span>
+      </div>
+      <div class="nav-item" onclick="showPage('titleab')">
+        <span class="icon">🔤</span> Title A/B Test
+        <span class="pro-tag">PRO</span>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Pay Per Use</div>
+      <div class="nav-item" onclick="showPage('script')">
+        <span class="icon">📝</span> Script Writer
+        <span style="margin-left:auto;font-size:10px;color:var(--text2);">₹39</span>
+      </div>
+      <div class="nav-item" onclick="showPage('thumbnail')">
+        <span class="icon">🖼️</span> Thumbnail Gen
+        <span style="margin-left:auto;font-size:10px;color:var(--text2);">₹39</span>
+      </div>
+      <div class="nav-item" onclick="showPage('competitor')">
+        <span class="icon">🕵️</span> Competitor Analysis
+        <span style="margin-left:auto;font-size:10px;color:var(--text2);">₹49</span>
+      </div>
+      <div class="nav-item" onclick="showPage('audit')">
+        <span class="icon">🔍</span> Channel Audit
+        <span style="margin-left:auto;font-size:10px;color:var(--text2);">₹129</span>
+      </div>
+      <div class="nav-item" onclick="showPage('brand')">
+        <span class="icon">🤝</span> Brand Email
+        <span style="margin-left:auto;font-size:10px;color:var(--text2);">₹29</span>
+      </div>
+      <div class="nav-item" onclick="showPage('blog')">
+        <span class="icon">📰</span> Video→Blog
+        <span style="margin-left:auto;font-size:10px;color:var(--text2);">₹49</span>
+      </div>
+      <div class="nav-item" onclick="showPage('comment')">
+        <span class="icon">💬</span> Comment Reply
+        <span style="margin-left:auto;font-size:10px;color:var(--text2);">₹19</span>
+      </div>
+      <div class="nav-item" onclick="showPage('nichepack')">
+        <span class="icon">📦</span> Niche Pack
+        <span style="margin-left:auto;font-size:10px;color:var(--text2);">₹199</span>
+      </div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <div class="nav-item" onclick="showPage('income')">
+        <span class="icon">💰</span> Income Estimator
+      </div>
+      <div class="nav-item" onclick="showPage('monetization')">
+        <span class="icon">🎯</span> Monetization Check
+      </div>
+      <div class="nav-item" onclick="showPage('score')">
+        <span class="icon">⭐</span> Creator Score
+      </div>
+      <div class="nav-item" onclick="showPage('settings')">
+        <span class="icon">⚙️</span> Settings
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="hero-banner">
+        <h2>Namaste, <span id="welcomeName">Creator</span>! 👋</h2>
+        <p>Aaj kya banane wale ho? PrachiGen Studio ready hai tere liye.</p>
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="showPage('ideas')">💡 Ideas Generate Karo</button>
+          <button class="quick-btn" onclick="showPage('hooks')">🎣 Hook Banao</button>
+          <button class="quick-btn" onclick="showPage('calendar')">📅 Calendar Banao</button>
+          <button class="quick-btn" onclick="showPage('script')">📝 Script Likho</button>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-value" id="dashIdeasCount">0</div>
+          <div class="stat-label">Ideas Generated</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="dashScoreDisplay">0</div>
+          <div class="stat-label">Creator Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="dashPlanDisplay">FREE</div>
+          <div class="stat-label">Current Plan</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📊 Daily Usage</h3>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+              <span style="color:var(--text2);">Ideas Today</span>
+              <span id="ideasUsageText">0/5</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="ideasProgress" style="width:0%"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+              <span style="color:var(--text2);">Hooks Today</span>
+              <span id="hooksUsageText">0/3</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="hooksProgress" style="width:0%"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+              <span style="color:var(--text2);">Captions Today</span>
+              <span id="captionsUsageText">0/3</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="captionsProgress" style="width:0%"></div></div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="document.getElementById('proModal').style.display='flex'">⚡ Upgrade for Unlimited</button>
+      </div>
+
+      <div class="card">
+        <h3>🔥 Today's Top Trending Niche</h3>
+        <div id="trendingNicheDisplay" style="color:var(--text2);font-size:14px;">Loading...</div>
+      </div>
+    </div>
+
+    <!-- IDEAS PAGE -->
+    <div class="page" id="page-ideas">
+      <div class="page-header">
+        <h1>💡 Idea Generator</h1>
+        <p>Low competition, high viral potential ideas — niche ke hisab se</p>
+      </div>
+
+      <div class="card">
+        <h3>Niche Select Karo</h3>
+        <div class="input-row">
+          <select id="ideaNiche">
+            <option value="">Main Niche...</option>
+            <option>Gaming</option>
+            <option>Finance & Money</option>
+            <option>Health & Fitness</option>
+            <option>Tech & AI</option>
+            <option>Comedy & Entertainment</option>
+            <option>Education & Learning</option>
+            <option>Food & Cooking</option>
+            <option>Travel & Lifestyle</option>
+            <option>Motivation & Self Help</option>
+            <option>Business & Entrepreneurship</option>
+            <option>Fashion & Beauty</option>
+            <option>Bollywood & Movies</option>
+            <option>News & Current Affairs</option>
+          </select>
+          <select id="ideaSubNiche">
+            <option value="">Sub-niche...</option>
+          </select>
+          <select id="ideaFormat">
+            <option value="both">Shorts + Long</option>
+            <option value="shorts">Shorts Only</option>
+            <option value="long">Long Form Only</option>
+          </select>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:13px;color:var(--text2);" id="ideaUsageCounter">Free: 5 ideas/day remaining</span>
+          <button class="btn btn-primary" onclick="generateIdeas()">✨ Generate Ideas</button>
+        </div>
+      </div>
+
+      <div id="ideasOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Niche select karo aur Generate dabao...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOOKS PAGE -->
+    <div class="page" id="page-hooks">
+      <div class="page-header">
+        <h1>🎣 Hook Generator</h1>
+        <p>Pehle 3 seconds mein viewer ko pakad lo</p>
+      </div>
+
+      <div class="card">
+        <h3>Topic & Style</h3>
+        <div class="input-row">
+          <input type="text" id="hookTopic" placeholder="Video ka topic (e.g. 5 money mistakes)..." />
+          <select id="hookStyle">
+            <option value="curiosity">Curiosity Hook</option>
+            <option value="shock">Shock Value</option>
+            <option value="question">Question Hook</option>
+            <option value="story">Story Hook</option>
+            <option value="controversial">Controversial</option>
+            <option value="list">List Hook</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="generateHooks()">🎣 Hooks Generate Karo</button>
+      </div>
+
+      <div style="position:relative;" id="hooksOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Topic dalo aur hooks generate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAPTIONS PAGE -->
+    <div class="page" id="page-captions">
+      <div class="page-header">
+        <h1>✍️ Caption Generator</h1>
+        <p>Engaging captions with hashtags</p>
+      </div>
+
+      <div class="card">
+        <h3>Caption Details</h3>
+        <div class="input-row">
+          <input type="text" id="captionTopic" placeholder="Video topic..." />
+          <select id="captionPlatform">
+            <option value="youtube">YouTube</option>
+            <option value="instagram">Instagram</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <select id="captionTone">
+            <option value="casual">Casual/Friendly</option>
+            <option value="professional">Professional</option>
+            <option value="funny">Funny/Meme</option>
+            <option value="motivational">Motivational</option>
+            <option value="hinglish">Hinglish</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="generateCaptions()">✍️ Caption Banao</button>
+      </div>
+
+      <div id="captionsOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Topic dalo aur captions generate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDAR PAGE -->
+    <div class="page" id="page-calendar">
+      <div class="page-header">
+        <h1>📅 30-Day Content Calendar</h1>
+        <p>Ek click mein poore mahine ka plan</p>
+      </div>
+
+      <div id="calendarProGate">
+        <div class="card">
+          <h3>Generate Calendar</h3>
+          <div class="input-row">
+            <select id="calNiche">
+              <option>Gaming</option>
+              <option>Finance & Money</option>
+              <option>Health & Fitness</option>
+              <option>Tech & AI</option>
+              <option>Comedy & Entertainment</option>
+              <option>Education & Learning</option>
+              <option>Food & Cooking</option>
+              <option>Business & Entrepreneurship</option>
+            </select>
+            <select id="calFormat">
+              <option value="mixed">Shorts + Long Mix</option>
+              <option value="shorts">Shorts Only</option>
+              <option value="long">Long Only</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="checkProAndGenCalendar()">📅 Calendar Generate Karo</button>
+        </div>
+        <div id="calendarOutput" style="display:none;">
+          <div class="card">
+            <h3>📅 Your 30-Day Plan</h3>
+            <div id="calendarGrid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOP ANALYZER -->
+    <div class="page" id="page-flop">
+      <div class="page-header">
+        <h1>📊 Flop Risk Analyzer</h1>
+        <p>Video publish karne se pehle check karo</p>
+      </div>
+
+      <div class="card">
+        <h3>Video Details Dalo</h3>
+        <div class="input-group">
+          <label>Video Title</label>
+          <input type="text" id="flopTitle" placeholder="Tera video title..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;" />
+        </div>
+        <div class="input-group" style="margin-top:12px;">
+          <label>Hook (first 3 seconds)</label>
+          <input type="text" id="flopHook" placeholder="Tera hook kya hai..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;" />
+        </div>
+        <div class="input-group" style="margin-top:12px;">
+          <label>Thumbnail Description</label>
+          <input type="text" id="flopThumb" placeholder="Thumbnail mein kya hai..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;" />
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="checkProAndAnalyzeFlop()">🔍 Analyze Karo</button>
+      </div>
+
+      <div id="flopOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Details dalo aur analyze karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHORTS TO REELS -->
+    <div class="page" id="page-shorts">
+      <div class="page-header">
+        <h1>📱 Shorts → Reels Converter</h1>
+        <p>Ek content, teen platforms — YouTube, Instagram, Facebook</p>
+      </div>
+
+      <div class="card">
+        <h3>Shorts Script/Idea</h3>
+        <textarea id="shortsInput" rows="5" placeholder="Apna YouTube Shorts script ya idea paste karo..."></textarea>
+        <button class="btn btn-primary" style="margin-top:12px;" onclick="checkProAndConvertShorts()">📱 Convert Karo</button>
+      </div>
+
+      <div id="shortsOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Script paste karo aur convert karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRENDS PAGE -->
+    <div class="page" id="page-trends">
+      <div class="page-header">
+        <h1>🔥 Trending Ideas</h1>
+        <p>Aaj ka trend = aaj ka video idea</p>
+      </div>
+
+      <div class="card">
+        <h3>Trending Topics se Ideas</h3>
+        <div class="input-row">
+          <select id="trendNiche">
+            <option>Tech & AI</option>
+            <option>Finance & Money</option>
+            <option>Entertainment</option>
+            <option>Gaming</option>
+            <option>Health</option>
+            <option>Bollywood</option>
+            <option>Business</option>
+          </select>
+          <select id="trendAudience">
+            <option value="india">India Audience</option>
+            <option value="global">Global Audience</option>
+            <option value="hinglish">Hinglish Audience</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="checkProAndGetTrends()">🔥 Trending Ideas Lo</button>
+      </div>
+
+      <div id="trendsOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Niche select karo aur trending ideas dekho...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TITLE A/B -->
+    <div class="page" id="page-titleab">
+      <div class="page-header">
+        <h1>🔤 Title A/B Generator</h1>
+        <p>10 title variations — highest CTR wala choose karo</p>
+      </div>
+
+      <div class="card">
+        <h3>Video Idea Dalo</h3>
+        <div class="input-row">
+          <input type="text" id="titleTopic" placeholder="Video ka main topic..." />
+          <select id="titlePlatform">
+            <option value="youtube">YouTube</option>
+            <option value="shorts">YouTube Shorts</option>
+            <option value="instagram">Instagram</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="checkProAndGenerateTitles()">🔤 Titles Generate Karo</button>
+      </div>
+
+      <div id="titleOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Topic dalo aur 10 titles generate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCRIPT WRITER -->
+    <div class="page" id="page-script">
+      <div class="page-header">
+        <h1>📝 Script Writer <span class="feature-tag">₹39/script</span></h1>
+        <p>Complete video script — Hook se CTA tak</p>
+      </div>
+
+      <div class="card">
+        <h3>Script Details</h3>
+        <div class="input-row">
+          <input type="text" id="scriptTopic" placeholder="Video topic..." />
+          <select id="scriptType">
+            <option value="shorts">YouTube Shorts (60 sec)</option>
+            <option value="medium">Medium (5-8 min)</option>
+            <option value="long">Long Form (10-15 min)</option>
+          </select>
+        </div>
+        <div class="input-row">
+          <select id="scriptNiche">
+            <option>Tech & AI</option>
+            <option>Finance & Money</option>
+            <option>Health & Fitness</option>
+            <option>Gaming</option>
+            <option>Education</option>
+            <option>Comedy</option>
+            <option>Motivation</option>
+            <option>Business</option>
+          </select>
+          <select id="scriptLang">
+            <option value="english">English</option>
+            <option value="hinglish">Hinglish</option>
+            <option value="hindi">Hindi</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="handlePerUse('script', '📝', 'Viral Script Writer', 'Complete script with hook, content & CTA', '₹39')">📝 Script Generate Karo (₹39)</button>
+      </div>
+
+      <div id="scriptOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Topic dalo aur script generate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- THUMBNAIL GENERATOR -->
+    <div class="page" id="page-thumbnail">
+      <div class="page-header">
+        <h1>🖼️ Thumbnail Generator <span class="feature-tag">₹39/pack</span></h1>
+        <p>5 thumbnail concepts + AI generated images</p>
+      </div>
+
+      <div class="card">
+        <h3>Thumbnail Details</h3>
+        <div class="input-row">
+          <input type="text" id="thumbTopic" placeholder="Video topic..." />
+          <select id="thumbStyle">
+            <option value="clickbait">High CTR/Clickbait</option>
+            <option value="professional">Professional</option>
+            <option value="minimal">Minimal</option>
+            <option value="gaming">Gaming Style</option>
+            <option value="educational">Educational</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="handlePerUse('thumbnail', '🖼️', 'Thumbnail Pack Generator', '5 AI generated thumbnails for your video', '₹39')">🖼️ Thumbnails Generate Karo (₹39)</button>
+      </div>
+
+      <div id="thumbnailOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Topic dalo aur thumbnails generate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPETITOR ANALYSIS -->
+    <div class="page" id="page-competitor">
+      <div class="page-header">
+        <h1>🕵️ Competitor Analysis <span class="feature-tag">₹49/report</span></h1>
+        <p>Competitor kya kar raha hai jo tu nahi kar raha</p>
+      </div>
+
+      <div class="card">
+        <h3>Competitor Details</h3>
+        <div class="input-row">
+          <input type="text" id="competitorName" placeholder="Competitor channel name..." />
+          <select id="competitorNiche">
+            <option>Tech & AI</option>
+            <option>Finance</option>
+            <option>Gaming</option>
+            <option>Education</option>
+            <option>Entertainment</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="handlePerUse('competitor', '🕵️', 'Competitor Analysis', 'Deep dive into competitor strategy', '₹49')">🕵️ Analyze Karo (₹49)</button>
+      </div>
+
+      <div id="competitorOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Channel naam dalo aur analyze karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANNEL AUDIT -->
+    <div class="page" id="page-audit">
+      <div class="page-header">
+        <h1>🔍 Channel Audit <span class="feature-tag">₹129/report</span></h1>
+        <p>Tera channel kya galat kar raha hai — detailed report</p>
+      </div>
+
+      <div class="card">
+        <h3>Channel Details</h3>
+        <div class="input-row">
+          <input type="text" id="auditChannel" placeholder="Tera channel name..." />
+          <input type="text" id="auditSubs" placeholder="Subscribers count..." />
+        </div>
+        <div class="input-row">
+          <select id="auditNiche">
+            <option>Tech & AI</option>
+            <option>Finance</option>
+            <option>Gaming</option>
+            <option>Education</option>
+            <option>Entertainment</option>
+            <option>Health</option>
+          </select>
+          <input type="text" id="auditVideos" placeholder="Total videos..." />
+        </div>
+        <button class="btn btn-primary" onclick="handlePerUse('audit', '🔍', 'Channel Audit Report', 'Complete channel analysis with growth plan', '₹129')">🔍 Audit Karo (₹129)</button>
+      </div>
+
+      <div id="auditOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Channel details dalo aur audit karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRAND DEAL EMAIL -->
+    <div class="page" id="page-brand">
+      <div class="page-header">
+        <h1>🤝 Brand Deal Email <span class="feature-tag">₹29/email</span></h1>
+        <p>Professional brand pitch email — AI se</p>
+      </div>
+
+      <div class="card">
+        <h3>Details</h3>
+        <div class="input-row">
+          <input type="text" id="brandName" placeholder="Brand ka naam..." />
+          <input type="text" id="brandNiche" placeholder="Tera niche..." />
+        </div>
+        <div class="input-row">
+          <input type="text" id="brandSubs" placeholder="Subscribers..." />
+          <input type="text" id="brandViews" placeholder="Avg views per video..." />
+        </div>
+        <button class="btn btn-primary" onclick="handlePerUse('brand', '🤝', 'Brand Deal Email', 'Professional pitch email to attract sponsorships', '₹29')">🤝 Email Generate Karo (₹29)</button>
+      </div>
+
+      <div id="brandOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Details dalo aur brand email generate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIDEO TO BLOG -->
+    <div class="page" id="page-blog">
+      <div class="page-header">
+        <h1>📰 Video → Blog Converter <span class="feature-tag">₹49/use</span></h1>
+        <p>Ek content = Multiple platforms</p>
+      </div>
+
+      <div class="card">
+        <h3>Video Script Paste Karo</h3>
+        <textarea id="blogInput" rows="8" placeholder="Apna video script ya summary paste karo..."></textarea>
+        <div class="input-row" style="margin-top:12px;">
+          <select id="blogLang">
+            <option value="english">English Blog</option>
+            <option value="hinglish">Hinglish Blog</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="handlePerUse('blog', '📰', 'Video to Blog Converter', 'Convert video script to SEO blog post', '₹49')">📰 Blog Convert Karo (₹49)</button>
+      </div>
+
+      <div id="blogOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Script paste karo aur blog convert karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMENT REPLY -->
+    <div class="page" id="page-comment">
+      <div class="page-header">
+        <h1>💬 Comment Reply Generator <span class="feature-tag">₹19/use</span></h1>
+        <p>Engaging replies — community grow karo</p>
+      </div>
+
+      <div class="card">
+        <h3>Comments Paste Karo</h3>
+        <textarea id="commentInput" rows="6" placeholder="Top 5-10 comments paste karo (ek line mein ek comment)..."></textarea>
+        <div class="input-row" style="margin-top:12px;">
+          <select id="commentTone">
+            <option value="friendly">Friendly</option>
+            <option value="funny">Funny</option>
+            <option value="professional">Professional</option>
+            <option value="hinglish">Hinglish</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="handlePerUse('comment', '💬', 'Comment Reply Generator', 'Engaging replies for all your comments', '₹19')">💬 Replies Generate Karo (₹19)</button>
+      </div>
+
+      <div id="commentOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Comments paste karo aur replies generate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- NICHE PACK -->
+    <div class="page" id="page-nichepack">
+      <div class="page-header">
+        <h1>📦 Custom Niche Pack <span class="feature-tag">₹199/pack</span></h1>
+        <p>50+ ideas + 30-day calendar + hooks — sab ek PDF pack mein</p>
+      </div>
+
+      <div class="card">
+        <h3>Apna Niche Batao</h3>
+        <div class="input-row">
+          <input type="text" id="packNiche" placeholder="Specific niche (e.g. AI tools for students)..." />
+          <select id="packAudience">
+            <option value="india">Indian Audience</option>
+            <option value="global">Global</option>
+            <option value="hinglish">Hinglish</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="handlePerUse('nichepack', '📦', 'Custom Niche Pack', '50+ ideas + 30-day calendar + hooks in one pack', '₹199')">📦 Pack Generate Karo (₹199)</button>
+      </div>
+
+      <div id="nichepackOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Niche dalo aur pack generate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INCOME ESTIMATOR -->
+    <div class="page" id="page-income">
+      <div class="page-header">
+        <h1>💰 Income Estimator</h1>
+        <p>Tera channel kitna kama sakta hai?</p>
+      </div>
+
+      <div class="card">
+        <h3>Channel Details</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>Subscribers</label>
+            <input type="number" id="incSubs" placeholder="e.g. 10000" />
+          </div>
+          <div class="input-group">
+            <label>Avg Views per Video</label>
+            <input type="number" id="incViews" placeholder="e.g. 5000" />
+          </div>
+          <div class="input-group">
+            <label>Videos per Month</label>
+            <input type="number" id="incVideos" placeholder="e.g. 12" />
+          </div>
+          <div class="input-group">
+            <label>Niche</label>
+            <select id="incNiche">
+              <option value="finance">Finance (High CPM)</option>
+              <option value="tech">Tech & AI</option>
+              <option value="gaming">Gaming</option>
+              <option value="education">Education</option>
+              <option value="entertainment">Entertainment (Low CPM)</option>
+              <option value="health">Health & Fitness</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="estimateIncome()">💰 Estimate Karo</button>
+      </div>
+
+      <div id="incomeOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Channel details dalo aur estimate karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONETIZATION CHECK -->
+    <div class="page" id="page-monetization">
+      <div class="page-header">
+        <h1>🎯 Monetization Checker</h1>
+        <p>YPP se kitne door ho — aur kya improve karo</p>
+      </div>
+
+      <div class="card">
+        <h3>Channel Stats</h3>
+        <div class="grid-2">
+          <div class="input-group">
+            <label>Current Subscribers</label>
+            <input type="number" id="monSubs" placeholder="e.g. 500" />
+          </div>
+          <div class="input-group">
+            <label>Watch Hours (last 12 months)</label>
+            <input type="number" id="monHours" placeholder="e.g. 200" />
+          </div>
+          <div class="input-group">
+            <label>Videos Published</label>
+            <input type="number" id="monVideos" placeholder="e.g. 25" />
+          </div>
+          <div class="input-group">
+            <label>Channel Age (months)</label>
+            <input type="number" id="monAge" placeholder="e.g. 3" />
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="checkMonetization()">🎯 Check Karo</button>
+      </div>
+
+      <div id="monetizationOutput">
+        <div class="output-box">
+          <span class="output-placeholder">Stats dalo aur check karo...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREATOR SCORE -->
+    <div class="page" id="page-score">
+      <div class="page-header">
+        <h1>⭐ Creator Score</h1>
+        <p>Apna creator level dekho — 0 to 100</p>
+      </div>
+
+      <div class="card">
+        <div class="creator-score-display">
+          <div class="big-score" id="creatorScoreValue">0</div>
+          <div class="score-info">
+            <h4 id="scoreLevelText">Beginner Creator</h4>
+            <p id="scoreDescText">Abhi shuru kiya hai — keep going!</p>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <div class="score-meter">
+            <div class="score-label">Ideas Generated</div>
+            <div class="score-bar"><div class="score-fill" id="scoreBar1" style="width:0%;background:var(--accent)"></div></div>
+            <div class="score-value" id="scoreVal1">0</div>
+          </div>
+          <div class="score-meter">
+            <div class="score-label">Hooks Created</div>
+            <div class="score-bar"><div class="score-fill" id="scoreBar2" style="width:0%;background:var(--accent2)"></div></div>
+            <div class="score-value" id="scoreVal2">0</div>
+          </div>
+          <div class="score-meter">
+            <div class="score-label">Days Active</div>
+            <div class="score-bar"><div class="score-fill" id="scoreBar3" style="width:0%;background:#7c3aed"></div></div>
+            <div class="score-value" id="scoreVal3">0</div>
+          </div>
+          <div class="score-meter">
+            <div class="score-label">Features Used</div>
+            <div class="score-bar"><div class="score-fill" id="scoreBar4" style="width:0%;background:var(--success)"></div></div>
+            <div class="score-value" id="scoreVal4">0</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="calculateScore()">🔄 Score Refresh Karo</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <h1>⚙️ Settings</h1>
+        <p>App customize karo</p>
+      </div>
+
+      <div class="card">
+        <h3>🔑 API Configuration</h3>
+        <div class="input-group">
+          <label>Gemini API Key</label>
+          <input type="password" id="settingsApiKey" placeholder="AIzaSy..." />
+        </div>
+        <button class="btn btn-primary" onclick="saveApiKey()">Save Key</button>
+      </div>
+
+      <div class="card">
+        <h3>👤 Profile</h3>
+        <div class="input-group">
+          <label>Tera Naam</label>
+          <input type="text" id="settingsName" placeholder="Creator naam..." />
+        </div>
+        <div class="input-group">
+          <label>Primary Niche</label>
+          <select id="settingsNiche">
+            <option>Gaming</option>
+            <option>Finance & Money</option>
+            <option>Health & Fitness</option>
+            <option>Tech & AI</option>
+            <option>Comedy & Entertainment</option>
+            <option>Education & Learning</option>
+            <option>Food & Cooking</option>
+            <option>Business & Entrepreneurship</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="saveProfile()">Profile Save Karo</button>
+      </div>
+
+      <div class="card">
+        <h3>💳 Razorpay Keys</h3>
+        <div class="input-group">
+          <label>Razorpay Key ID</label>
+          <input type="text" id="rzpKeyInput" placeholder="rzp_live_..." />
+        </div>
+        <button class="btn btn-primary" onclick="saveRzpKey()">Save</button>
+        <p style="font-size:12px;color:var(--text2);margin-top:8px;">⚠️ Ye key sirf browser mein save hogi</p>
+      </div>
+
+      <div class="card">
+        <h3>🗑️ Danger Zone</h3>
+        <button class="btn" style="background:rgba(239,68,68,0.15);color:var(--error);border:1px solid var(--error);" onclick="resetApp()">Reset All Data</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========================
+// STATE MANAGEMENT
+// ========================
+let state = {
+  apiKey: '',
+  rzpKey: '',
+  userName: 'Creator',
+  primaryNiche: 'Tech & AI',
+  isPro: false,
+  hinglish: false,
+  usage: { ideas: 0, hooks: 0, captions: 0, date: new Date().toDateString() },
+  stats: { totalIdeas: 0, totalHooks: 0, daysActive: 1, featuresUsed: 0 },
+  pendingPerUse: null
+};
+
+// Load from localStorage
+function loadState() {
+  try {
+    const saved = localStorage.getItem('prachigen_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state = { ...state, ...parsed };
+    }
+    // Reset daily usage if new day
+    if (state.usage.date !== new Date().toDateString()) {
+      state.usage = { ideas: 0, hooks: 0, captions: 0, date: new Date().toDateString() };
+      saveState();
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem('prachigen_state', JSON.stringify(state)); } catch(e) {}
+}
+
+// ========================
+// SETUP
+// ========================
+function setupApp() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const name = document.getElementById('userNameInput').value.trim() || 'Creator';
+  const niche = document.getElementById('primaryNicheInput').value;
+
+  if (!key) { showToast('API key dalo!', 'error'); return; }
+
+  state.apiKey = key;
+  state.userName = name;
+  state.primaryNiche = niche || 'Tech & AI';
+  saveState();
+
+  document.getElementById('setupModal').style.display = 'none';
+  document.getElementById('welcomeName').textContent = name;
+  loadTrendingNiche();
+  updateDashboard();
+}
+
+// ========================
+// NAVIGATION
+// ========================
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.toLowerCase().includes(pageId.toLowerCase().replace(/-/g, ' '))) {
+      n.classList.add('active');
+    }
+  });
+
+  state.stats.featuresUsed++;
+  saveState();
+}
+
+// ========================
+// GEMINI API
+// ========================
+async function callGemini(prompt) {
+  if (!state.apiKey) {
+    showToast('API key nahi hai! Settings mein dalo.', 'error');
+    return null;
+  }
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.8, maxOutputTokens: 2048 }
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) { showToast('API Error: ' + data.error.message, 'error'); return null; }
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  } catch(e) {
+    showToast('Network error. Check internet connection.', 'error');
+    return null;
+  }
+}
+
+// ========================
+// SUBNICHE DATA
+// ========================
+const subNiches = {
+  'Gaming': ['Mobile Gaming', 'PC Gaming', 'Game Reviews', 'Gaming Tips', 'Esports', 'Retro Gaming', 'Gaming News'],
+  'Finance & Money': ['Stock Market', 'Crypto', 'Personal Finance', 'Side Hustles', 'Real Estate', 'Saving Tips', 'Investing for Beginners'],
+  'Health & Fitness': ['Weight Loss', 'Gym Workouts', 'Yoga', 'Mental Health', 'Diet & Nutrition', 'Home Workouts', 'Running'],
+  'Tech & AI': ['AI Tools', 'Smartphones', 'Coding', 'Gadget Reviews', 'Cybersecurity', 'AI for Business', 'Tech News'],
+  'Comedy & Entertainment': ['Reaction Videos', 'Sketches', 'Stand-up', 'Meme Reviews', 'Commentary', 'Prank Videos'],
+  'Education & Learning': ['Study Tips', 'Language Learning', 'History', 'Science', 'Math Tricks', 'Career Advice', 'Skills'],
+  'Food & Cooking': ['Street Food', 'Quick Recipes', 'Restaurant Reviews', 'Healthy Eating', 'Baking', 'Indian Food', 'Mukbang'],
+  'Travel & Lifestyle': ['Budget Travel', 'Luxury Travel', 'Solo Travel', 'India Travel', 'Travel Hacks', 'Vlogging'],
+  'Motivation & Self Help': ['Morning Routines', 'Productivity', 'Book Summaries', 'Success Stories', 'Mindset', 'Habits'],
+  'Business & Entrepreneurship': ['Startup Stories', 'Marketing', 'Freelancing', 'Digital Marketing', 'E-commerce', 'Personal Branding'],
+  'Fashion & Beauty': ['Outfit Ideas', 'Skincare', 'Makeup Tutorials', 'Fashion Hauls', 'Budget Fashion', 'Men\'s Fashion'],
+  'Bollywood & Movies': ['Movie Reviews', 'Celebrity News', 'Behind the Scenes', 'Box Office', 'Web Series Reviews', 'Film Analysis'],
+  'News & Current Affairs': ['Political News', 'Business News', 'Technology News', 'International News', 'Sports News', 'Fact Check']
+};
+
+document.getElementById('ideaNiche').addEventListener('change', function() {
+  const sub = document.getElementById('ideaSubNiche');
+  sub.innerHTML = '<option value="">Sub-niche...</option>';
+  const options = subNiches[this.value] || [];
+  options.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sub.appendChild(opt);
+  });
+});
+
+// ========================
+// IDEA GENERATOR
+// ========================
+async function generateIdeas() {
+  if (!state.isPro && state.usage.ideas >= 5) {
+    showProModal('Aaj ke free ideas khatam ho gaye! Pro mein unlimited ideas milte hain.');
+    return;
+  }
+
+  const niche = document.getElementById('ideaNiche').value;
+  const subNiche = document.getElementById('ideaSubNiche').value;
+  const format = document.getElementById('ideaFormat').value;
+
+  if (!niche) { showToast('Niche select karo!', 'error'); return; }
+
+  const container = document.getElementById('ideasOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:200px;"></div>';
+
+  const hinglishNote = state.hinglish ? 'Ideas Hinglish audience ke liye banao (mix of Hindi and English).' : '';
+  const formatNote = format === 'shorts' ? 'Only YouTube Shorts ideas.' : format === 'long' ? 'Only long form video ideas.' : 'Mix of Shorts and Long form ideas.';
+
+  const prompt = `You are a YouTube content strategist for Indian creators. Generate 8 unique, low-competition video ideas for:
+Niche: ${niche}${subNiche ? ', Sub-niche: ' + subNiche : ''}
+${formatNote}
+${hinglishNote}
+
+For each idea provide:
+1. 🎬 Video Title (catchy, SEO optimized)
+2. 📊 Competition Level: Low/Medium/High
+3. 🔥 Viral Potential: 1-10
+4. 📱 Format: Shorts/Long/Both
+5. 💡 Why it will work (1 line)
+
+Make ideas genuinely unique and actionable. Focus on what's trending but underserved.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    state.usage.ideas++;
+    state.stats.totalIdeas++;
+    saveState();
+    updateDashboard();
+
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error aaya. Dobara try karo.</span></div>';
+  }
+}
+
+// ========================
+// HOOK GENERATOR
+// ========================
+async function generateHooks() {
+  if (!state.isPro && state.usage.hooks >= 3) {
+    showProModal('Free hooks khatam! Pro upgrade karo unlimited ke liye.');
+    return;
+  }
+
+  const topic = document.getElementById('hookTopic').value.trim();
+  const style = document.getElementById('hookStyle').value;
+
+  if (!topic) { showToast('Topic dalo!', 'error'); return; }
+
+  const container = document.getElementById('hooksOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:150px;"></div>';
+
+  const hinglishNote = state.hinglish ? 'Write hooks in Hinglish (Hindi + English mix).' : '';
+
+  const prompt = `Create 6 powerful ${style} video hooks for the topic: "${topic}"
+${hinglishNote}
+
+Each hook should:
+- Be max 2-3 sentences
+- Create immediate curiosity/engagement
+- Work as the first 3 seconds of a video
+- Have a numbered label and emoji
+
+Make them genuinely compelling and different from each other.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    state.usage.hooks++;
+    state.stats.totalHooks++;
+    saveState();
+    updateDashboard();
+
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+  }
+}
+
+// ========================
+// CAPTION GENERATOR
+// ========================
+async function generateCaptions() {
+  if (!state.isPro && state.usage.captions >= 3) {
+    showProModal('Free captions khatam! Pro upgrade karo.');
+    return;
+  }
+
+  const topic = document.getElementById('captionTopic').value.trim();
+  const platform = document.getElementById('captionPlatform').value;
+  const tone = document.getElementById('captionTone').value;
+
+  if (!topic) { showToast('Topic dalo!', 'error'); return; }
+
+  const container = document.getElementById('captionsOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:150px;"></div>';
+
+  const prompt = `Create engaging ${platform} captions for a video about: "${topic}"
+Tone: ${tone}
+${state.hinglish ? 'Write in Hinglish (Hindi + English mix).' : ''}
+
+Generate 3 caption variations with:
+- Main caption text (2-3 sentences)
+- Relevant hashtags (15-20)
+- CTA line
+- Emoji usage
+
+Make each variation different in approach.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    state.usage.captions++;
+    saveState();
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+  }
+}
+
+// ========================
+// PRO FEATURES
+// ========================
+function checkProAndGenCalendar() {
+  if (!state.isPro) { showProModal('30-Day Calendar ek Pro feature hai!'); return; }
+  generateCalendar();
+}
+
+async function generateCalendar() {
+  const niche = document.getElementById('calNiche').value;
+  const format = document.getElementById('calFormat').value;
+
+  const calOut = document.getElementById('calendarOutput');
+  calOut.style.display = 'block';
+  document.getElementById('calendarGrid').innerHTML = '<div style="color:var(--text2);font-size:14px;">Generating 30-day calendar...</div>';
+
+  const prompt = `Create a 30-day YouTube content calendar for ${niche} niche.
+Format: ${format}
+${state.hinglish ? 'Content ideas for Hinglish audience.' : ''}
+
+For each day (Day 1 to Day 30), provide:
+Day X: [Short video title/idea]
+
+Keep each day's content to one line. Mix viral, educational, trending, and evergreen content.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    const lines = result.split('\n').filter(l => l.trim());
+    const grid = document.getElementById('calendarGrid');
+    grid.className = 'calendar-grid';
+
+    let html = '';
+    lines.slice(0, 30).forEach((line, i) => {
+      const content = line.replace(/^Day \d+:?\s*/i, '').replace(/^\*+/, '').trim();
+      html += `<div class="cal-day">
+        <div class="day-num">D${i+1}</div>
+        <div class="day-content">${content.substring(0, 60)}</div>
+      </div>`;
+    });
+
+    grid.innerHTML = html;
+  }
+}
+
+function checkProAndAnalyzeFlop() {
+  if (!state.isPro) { showProModal('Flop Analyzer ek Pro feature hai!'); return; }
+  analyzeFlop();
+}
+
+async function analyzeFlop() {
+  const title = document.getElementById('flopTitle').value.trim();
+  const hook = document.getElementById('flopHook').value.trim();
+  const thumb = document.getElementById('flopThumb').value.trim();
+
+  if (!title) { showToast('Title dalo!', 'error'); return; }
+
+  const container = document.getElementById('flopOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:200px;"></div>';
+
+  const prompt = `Analyze this YouTube video for flop risk:
+
+Title: "${title}"
+Hook: "${hook}"
+Thumbnail: "${thumb}"
+
+Provide a detailed analysis with:
+1. 🎯 Overall Flop Risk Score: X/10 (10 = definitely flop)
+2. 📊 Title Analysis (CTR potential, SEO, clarity)
+3. 🎣 Hook Analysis (retention potential)  
+4. 🖼️ Thumbnail Analysis (visual appeal, click-worthiness)
+5. ✅ What's working well
+6. ⚠️ What needs improvement
+7. 💡 Specific suggestions to improve each element
+8. 📈 Predicted CTR range
+
+Be specific and actionable.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+  }
+}
+
+function checkProAndConvertShorts() {
+  if (!state.isPro) { showProModal('Shorts → Reels Converter ek Pro feature hai!'); return; }
+  convertShorts();
+}
+
+async function convertShorts() {
+  const script = document.getElementById('shortsInput').value.trim();
+  if (!script) { showToast('Script dalo!', 'error'); return; }
+
+  const container = document.getElementById('shortsOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:200px;"></div>';
+
+  const prompt = `Convert this YouTube Shorts content for multiple platforms:
+
+Original: "${script}"
+
+Create optimized versions for:
+
+📱 YOUTUBE SHORTS VERSION:
+- Optimized script
+- Title suggestions
+- Hashtags
+
+📸 INSTAGRAM REELS VERSION:
+- Adapted script
+- Caption
+- Hashtags (Instagram specific)
+- Audio suggestion
+
+👥 FACEBOOK REELS VERSION:
+- Adapted for Facebook audience
+- Caption
+- Hashtags
+
+Make each platform-specific with appropriate tone and style.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+  }
+}
+
+function checkProAndGetTrends() {
+  if (!state.isPro) { showProModal('Trending Ideas ek Pro feature hai!'); return; }
+  getTrends();
+}
+
+async function getTrends() {
+  const niche = document.getElementById('trendNiche').value;
+  const audience = document.getElementById('trendAudience').value;
+
+  const container = document.getElementById('trendsOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:200px;"></div>';
+
+  const prompt = `Generate 10 trending video ideas for ${niche} niche targeting ${audience} audience.
+
+For each idea:
+1. 🔥 Trending Topic/Event (what's hot right now in this space)
+2. 🎬 Video Angle/Hook
+3. 📊 Trend Freshness (how new is this trend: Very Fresh/Fresh/Established)
+4. ⏰ Best Time to Post
+5. 💡 Unique Angle to Stand Out
+
+${state.hinglish ? 'Make ideas relevant for Hinglish/Indian audience.' : ''}
+Focus on what creators can make THIS WEEK to capitalize on trends.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+  }
+}
+
+function checkProAndGenerateTitles() {
+  if (!state.isPro) { showProModal('Title A/B Generator ek Pro feature hai!'); return; }
+  generateTitles();
+}
+
+async function generateTitles() {
+  const topic = document.getElementById('titleTopic').value.trim();
+  const platform = document.getElementById('titlePlatform').value;
+  if (!topic) { showToast('Topic dalo!', 'error'); return; }
+
+  const container = document.getElementById('titleOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:200px;"></div>';
+
+  const prompt = `Generate 10 ${platform} title variations for: "${topic}"
+
+For each title provide:
+- The title itself
+- Predicted CTR: Low/Medium/High
+- Why it works (1 line)
+
+Use different approaches:
+- Curiosity gap
+- Number-based
+- Question format
+- Shocking/controversial
+- How-to
+- Story-based
+- Benefit-focused
+
+${state.hinglish ? 'Some titles can be in Hinglish.' : ''}`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+  }
+}
+
+// ========================
+// PER USE FEATURES
+// ========================
+let currentPerUseFeature = null;
+
+function handlePerUse(feature, emoji, title, desc, price) {
+  currentPerUseFeature = feature;
+  document.getElementById('perUseEmoji').textContent = emoji;
+  document.getElementById('perUseTitle').textContent = title;
+  document.getElementById('perUseDesc').textContent = desc;
+  document.getElementById('perUsePrice').textContent = price;
+  document.getElementById('perUseModal').style.display = 'flex';
+}
+
+function closePerUseModal() {
+  document.getElementById('perUseModal').style.display = 'none';
+  currentPerUseFeature = null;
+}
+
+// ========================
+// FREE FEATURES (no payment)
+// ========================
+async function estimateIncome() {
+  const subs = document.getElementById('incSubs').value;
+  const views = document.getElementById('incViews').value;
+  const videos = document.getElementById('incVideos').value;
+  const niche = document.getElementById('incNiche').value;
+
+  if (!subs || !views) { showToast('Subscribers aur views dalo!', 'error'); return; }
+
+  const container = document.getElementById('incomeOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:200px;"></div>';
+
+  const prompt = `Estimate YouTube income for this channel:
+- Subscribers: ${subs}
+- Average views per video: ${views}
+- Videos per month: ${videos}
+- Niche: ${niche}
+
+Provide detailed income estimate:
+1. 💰 Monthly AdSense Revenue (INR range)
+2. 🎯 CPM Rate for this niche (INR)
+3. 📊 RPM estimate (INR)
+4. 💼 Sponsorship potential per video
+5. 🔗 Affiliate income potential
+6. 📱 Total monthly income range (realistic)
+7. 🚀 How to increase income - 3 specific tips
+8. ⏰ When to expect monetization (if not yet)
+
+Be realistic with Indian creator context.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+  }
+}
+
+async function checkMonetization() {
+  const subs = document.getElementById('monSubs').value;
+  const hours = document.getElementById('monHours').value;
+  const videos = document.getElementById('monVideos').value;
+  const age = document.getElementById('monAge').value;
+
+  if (!subs) { showToast('Stats dalo!', 'error'); return; }
+
+  const container = document.getElementById('monetizationOutput');
+  container.innerHTML = '<div class="output-box loading" style="min-height:200px;"></div>';
+
+  const prompt = `Analyze YouTube monetization eligibility:
+Current Stats:
+- Subscribers: ${subs} (Need: 1000)
+- Watch Hours: ${hours} (Need: 4000)
+- Videos: ${videos}
+- Channel Age: ${age} months
+
+Provide:
+1. 📊 Monetization Readiness Score: X%
+2. ✅ What requirements are met
+3. ❌ What's missing
+4. 📅 Estimated days to reach YPP (YouTube Partner Program)
+5. 🚀 Top 5 specific actions to reach monetization faster
+6. 📈 Weekly targets to set
+7. 💡 Content strategy recommendation
+
+Be encouraging but realistic.`;
+
+  const result = await callGemini(prompt);
+
+  if (result) {
+    container.innerHTML = `
+      <div style="position:relative;">
+        <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+        <button class="copy-btn" onclick="copyText(this)">Copy</button>
+      </div>`;
+  } else {
+    container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+  }
+}
+
+async function loadTrendingNiche() {
+  const prompt = `Give me 3 currently trending content niches for Indian YouTube creators this week. 
+Format as: "🔥 [Niche]: [Why trending - 1 line]" for each.
+Keep it brief and actionable.`;
+
+  const result = await callGemini(prompt);
+  const el = document.getElementById('trendingNicheDisplay');
+  if (result && el) {
+    el.innerHTML = formatOutput(result);
+  }
+}
+
+// ========================
+// CREATOR SCORE
+// ========================
+function calculateScore() {
+  const ideas = Math.min(state.stats.totalIdeas, 50);
+  const hooks = Math.min(state.stats.totalHooks, 30);
+  const days = Math.min(state.stats.daysActive, 30);
+  const features = Math.min(state.stats.featuresUsed, 20);
+
+  const score = Math.round(
+    (ideas / 50 * 35) +
+    (hooks / 30 * 25) +
+    (days / 30 * 20) +
+    (features / 20 * 20)
+  );
+
+  document.getElementById('creatorScoreValue').textContent = score;
+  document.getElementById('dashScoreDisplay').textContent = score;
+
+  let level, desc;
+  if (score < 20) { level = '🌱 Beginner Creator'; desc = 'Abhi shuru kiya hai — keep going!'; }
+  else if (score < 40) { level = '📈 Growing Creator'; desc = 'Acha chal raha hai — consistency rakho!'; }
+  else if (score < 60) { level = '🔥 Active Creator'; desc = 'Ekdum fire mode mein ho!'; }
+  else if (score < 80) { level = '⭐ Power Creator'; desc = 'Kya baat hai — legendary level ke qareeb!'; }
+  else { level = '👑 Legendary Creator'; desc = 'Tu PrachiGen ka champion hai!'; }
+
+  document.getElementById('scoreLevelText').textContent = level;
+  document.getElementById('scoreDescText').textContent = desc;
+
+  document.getElementById('scoreBar1').style.width = Math.min(ideas * 2, 100) + '%';
+  document.getElementById('scoreBar2').style.width = Math.min(hooks * 3.3, 100) + '%';
+  document.getElementById('scoreBar3').style.width = Math.min(days * 3.3, 100) + '%';
+  document.getElementById('scoreBar4').style.width = Math.min(features * 5, 100) + '%';
+
+  document.getElementById('scoreVal1').textContent = state.stats.totalIdeas;
+  document.getElementById('scoreVal2').textContent = state.stats.totalHooks;
+  document.getElementById('scoreVal3').textContent = state.stats.daysActive;
+  document.getElementById('scoreVal4').textContent = state.stats.featuresUsed;
+
+  saveState();
+  showToast('Score updated! 🎉', 'success');
+}
+
+// ========================
+// PAYMENT - RAZORPAY
+// ========================
+function initiatePayment(type) {
+  const rzpKey = state.rzpKey;
+
+  if (!rzpKey) {
+    showToast('Razorpay key nahi hai! Settings mein dalo. Abhi demo mode mein unlock ho raha hai.', 'error');
+    // Demo mode - unlock without payment
+    setTimeout(() => {
+      if (type === 'monthly' || type === 'lifetime') {
+        unlockPro();
+      } else if (type === 'peruse' && currentPerUseFeature) {
+        document.getElementById('perUseModal').style.display = 'none';
+        executePerUseFeature(currentPerUseFeature);
+      }
+    }, 1000);
+    return;
+  }
+
+  let amount, description;
+  if (type === 'monthly') { amount = 14900; description = 'PrachiGen Studio Pro - Monthly'; }
+  else if (type === 'lifetime') { amount = 79900; description = 'PrachiGen Studio Pro - Lifetime'; }
+  else { 
+    const prices = { script: 3900, thumbnail: 3900, competitor: 4900, audit: 12900, brand: 2900, blog: 4900, comment: 1900, nichepack: 19900 };
+    amount = prices[currentPerUseFeature] || 3900;
+    description = 'PrachiGen Studio - ' + currentPerUseFeature;
+  }
+
+  const options = {
+    key: rzpKey,
+    amount: amount,
+    currency: 'INR',
+    name: 'PrachiGen Studio',
+    description: description,
+    image: '',
+    handler: function(response) {
+      if (type === 'monthly' || type === 'lifetime') {
+        unlockPro();
+        document.getElementById('proModal').style.display = 'none';
+      } else {
+        document.getElementById('perUseModal').style.display = 'none';
+        executePerUseFeature(currentPerUseFeature);
+      }
+      showToast('Payment successful! 🎉', 'success');
+    },
+    prefill: { name: state.userName },
+    theme: { color: '#ff6b35' }
+  };
+
+  try {
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } catch(e) {
+    showToast('Razorpay load nahi hua. Razorpay script add karo.', 'error');
+  }
+}
+
+function unlockPro() {
+  state.isPro = true;
+  saveState();
+  document.getElementById('planBadge').textContent = 'PRO';
+  document.getElementById('planBadge').className = 'plan-badge pro';
+  document.getElementById('upgradeBtn').style.display = 'none';
+  document.getElementById('dashPlanDisplay').textContent = 'PRO';
+  showToast('Pro unlock ho gaya! 🎉 Unlimited access!', 'success');
+}
+
+async function executePerUseFeature(feature) {
+  showToast('Generating...', 'success');
+
+  const prompts = {
+    script: async () => {
+      const topic = document.getElementById('scriptTopic').value.trim() || 'General topic';
+      const type = document.getElementById('scriptType').value;
+      const niche = document.getElementById('scriptNiche').value;
+      const lang = document.getElementById('scriptLang').value;
+      const prompt = `Write a complete ${type} YouTube script for: "${topic}"
+Niche: ${niche}
+Language: ${lang}
+
+Include:
+🎬 HOOK (first ${type === 'shorts' ? '3 seconds' : '30 seconds'})
+📖 MAIN CONTENT (structured with clear sections)
+🎯 CTA (call to action)
+📝 TITLE suggestions (3 options)
+🏷️ TAGS (10 relevant tags)
+
+${type === 'shorts' ? 'Keep total script under 60 seconds when spoken.' : ''}
+${lang === 'hinglish' ? 'Write in Hinglish (Hindi + English mix).' : ''}
+Make it engaging, natural, and viral-worthy.`;
+      return prompt;
+    },
+    thumbnail: async () => {
+      const topic = document.getElementById('thumbTopic').value.trim() || 'YouTube video';
+      const style = document.getElementById('thumbStyle').value;
+      return `Generate 5 thumbnail concepts for YouTube video about: "${topic}"
+Style: ${style}
+
+For each thumbnail:
+🖼️ CONCEPT: Visual description
+📝 TEXT OVERLAY: Main text (max 5 words)
+🎨 COLOR SCHEME: 2-3 colors
+😮 EXPRESSION: If person shown, what expression
+💡 WHY IT WORKS: One line
+
+Then generate Pollinations.ai image prompts for each concept.`;
+    },
+    competitor: async () => {
+      const name = document.getElementById('competitorName').value.trim() || 'Unknown Channel';
+      const niche = document.getElementById('competitorNiche').value;
+      return `Analyze YouTube competitor strategy for channel: "${name}" in ${niche} niche.
+
+Provide:
+📊 ESTIMATED STRATEGY:
+- Content frequency
+- Video format mix
+- Title patterns
+- Thumbnail style
+
+🔍 WHAT THEY DO WELL:
+- Top 5 strengths
+
+⚠️ THEIR WEAKNESSES:
+- Gaps you can exploit
+
+💡 HOW TO BEAT THEM:
+- 5 specific strategies
+- Content angles they're missing
+- Audience segments they're ignoring
+
+🎯 YOUR ACTION PLAN:
+- Week 1 actions
+- Month 1 goals`;
+    },
+    audit: async () => {
+      const channel = document.getElementById('auditChannel').value.trim() || 'My Channel';
+      const subs = document.getElementById('auditSubs').value || '0';
+      const niche = document.getElementById('auditNiche').value;
+      const videos = document.getElementById('auditVideos').value || '0';
+      return `Audit YouTube channel:
+Channel: ${channel}
+Subscribers: ${subs}
+Niche: ${niche}
+Videos: ${videos}
+
+Provide DETAILED AUDIT:
+
+📊 CHANNEL HEALTH SCORE: X/100
+
+🎯 CONTENT STRATEGY ANALYSIS:
+- Niche clarity
+- Content consistency
+- Topic variety
+
+📈 GROWTH ANALYSIS:
+- Growth rate assessment
+- Bottlenecks identified
+
+⚠️ TOP 5 PROBLEMS:
+(With severity: Critical/Important/Minor)
+
+✅ WHAT'S WORKING:
+
+🚀 ACTION PLAN (Priority order):
+1. This week
+2. This month
+3. Next 3 months
+
+💰 MONETIZATION READINESS:`;
+    },
+    brand: async () => {
+      const brand = document.getElementById('brandName').value.trim() || 'Brand Name';
+      const niche = document.getElementById('brandNiche').value.trim() || 'Content Creation';
+      const subs = document.getElementById('brandSubs').value || '0';
+      const views = document.getElementById('brandViews').value || '0';
+      return `Write a professional brand collaboration pitch email to ${brand}:
+My Channel: ${niche} niche
+Subscribers: ${subs}
+Avg Views: ${views}
+${state.hinglish ? 'I create Hinglish content for Indian audience.' : ''}
+
+Write a compelling pitch email that:
+- Has a strong subject line
+- Opens with value, not ask
+- Shows audience relevance to the brand
+- Includes specific collaboration ideas (3 options)
+- Mentions deliverables clearly
+- Has professional but friendly tone
+- Includes a clear CTA
+
+Keep it concise but impactful. Include [YOUR EMAIL] and [YOUR PHONE] placeholders.`;
+    },
+    blog: async () => {
+      const script = document.getElementById('blogInput').value.trim() || 'Video content here';
+      const lang = document.getElementById('blogLang').value;
+      return `Convert this video content into a SEO-optimized blog post:
+
+"${script}"
+
+Create a full blog post with:
+📰 SEO TITLE (with keyword)
+🔍 META DESCRIPTION (150 chars)
+📝 FULL ARTICLE:
+- Introduction (150 words)
+- H2 sections with content
+- Bullet points where appropriate
+- Conclusion with CTA
+
+🏷️ SEO KEYWORDS: 5 primary keywords
+🔗 INTERNAL LINK SUGGESTIONS
+📊 WORD COUNT TARGET
+
+${lang === 'hinglish' ? 'Write in Hinglish (Hindi + English mix).' : 'Write in English.'}
+Optimize for Google search and reader engagement.`;
+    },
+    comment: async () => {
+      const comments = document.getElementById('commentInput').value.trim() || 'Great video!';
+      const tone = document.getElementById('commentTone').value;
+      return `Generate engaging YouTube comment replies for these comments:
+
+"${comments}"
+
+For each comment provide:
+- Original comment (quoted)
+- Your reply (${tone} tone)
+- Why this reply builds community
+
+Make replies:
+- Personal and genuine (not generic)
+- Encourage more engagement
+- Show creator personality
+- Sometimes ask follow-up questions
+${state.hinglish ? '- Some replies in Hinglish' : ''}`;
+    },
+    nichepack: async () => {
+      const niche = document.getElementById('packNiche').value.trim() || 'Content Creation';
+      const audience = document.getElementById('packAudience').value;
+      return `Create a COMPLETE niche research pack for: "${niche}"
+Target audience: ${audience}
+
+Include:
+
+📊 NICHE ANALYSIS:
+- Market size
+- Competition level
+- Monetization potential
+- Growth trend
+
+💡 50 VIDEO IDEAS:
+(Numbered, with format tag: S=Shorts, L=Long)
+
+📅 30-DAY CONTENT CALENDAR:
+(Day 1-30 with ideas)
+
+🎣 10 POWER HOOKS:
+(For this specific niche)
+
+🔑 SEO KEYWORDS:
+(20 keywords with search intent)
+
+💰 MONETIZATION STRATEGIES:
+(5 specific to this niche)
+
+🚀 GROWTH STRATEGY:
+(Month 1, 2, 3 plan)`;
+    }
+  };
+
+  if (prompts[feature]) {
+    const prompt = await prompts[feature]();
+    const result = await callGemini(prompt);
+    const outputId = feature + 'Output';
+    const container = document.getElementById(outputId);
+
+    if (container && result) {
+      container.innerHTML = `
+        <div style="position:relative;">
+          <div class="output-box" style="min-height:auto;">${formatOutput(result)}</div>
+          <button class="copy-btn" onclick="copyText(this)">Copy</button>
+        </div>`;
+
+      // For thumbnail, also generate images
+      if (feature === 'thumbnail') {
+        const topic = document.getElementById('thumbTopic').value.trim() || 'youtube video thumbnail';
+        const style = document.getElementById('thumbStyle').value;
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'grid-2';
+        imgContainer.style.marginTop = '16px';
+
+        const prompts2 = [
+          `${topic} ${style} youtube thumbnail dramatic lighting`,
+          `${topic} clickbait thumbnail colorful bold text`,
+          `${topic} professional youtube thumbnail high quality`
+        ];
+
+        prompts2.forEach(p => {
+          const encoded = encodeURIComponent(p);
+          imgContainer.innerHTML += `
+            <div class="thumbnail-preview">
+              <img src="https://image.pollinations.ai/prompt/${encoded}?width=640&height=360" 
+                   onerror="this.parentElement.innerHTML='<span style=color:var(--text2);font-size:13px;>Image load failed</span>'"
+                   loading="lazy" />
+            </div>`;
+        });
+
+        container.appendChild(imgContainer);
+      }
+    } else if (container) {
+      container.innerHTML = '<div class="output-box"><span class="output-placeholder">Error. Dobara try karo.</span></div>';
+    }
+  }
+}
+
+// ========================
+// HELPERS
+// ========================
+function formatOutput(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/^### (.*)/gm, '<h4 style="color:var(--accent);font-family:Syne,sans-serif;margin:12px 0 6px;">$1</h4>')
+    .replace(/^## (.*)/gm, '<h3 style="color:var(--accent2);font-family:Syne,sans-serif;margin:16px 0 8px;">$1</h3>')
+    .replace(/^# (.*)/gm, '<h2 style="color:var(--text);font-family:Syne,sans-serif;margin:20px 0 10px;">$1</h2>')
+    .replace(/\n/g, '<br>');
+}
+
+function copyText(btn) {
+  const box = btn.previousElementSibling || btn.parentElement.querySelector('.output-box');
+  const text = box ? box.innerText : '';
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast ${type} show`;
+  setTimeout(() => toast.className = 'toast', 3000);
+}
+
+function showProModal(msg) {
+  document.getElementById('proModal').style.display = 'flex';
+  showToast(msg, 'error');
+}
+
+function updateDashboard() {
+  document.getElementById('welcomeName').textContent = state.userName;
+  document.getElementById('dashIdeasCount').textContent = state.stats.totalIdeas;
+  document.getElementById('dashPlanDisplay').textContent = state.isPro ? 'PRO' : 'FREE';
+
+  // Usage bars
+  const ideasPct = Math.min((state.usage.ideas / 5) * 100, 100);
+  const hooksPct = Math.min((state.usage.hooks / 3) * 100, 100);
+  const capsPct = Math.min((state.usage.captions / 3) * 100, 100);
+
+  document.getElementById('ideasProgress').style.width = ideasPct + '%';
+  document.getElementById('hooksProgress').style.width = hooksPct + '%';
+  document.getElementById('captionsProgress').style.width = capsPct + '%';
+
+  document.getElementById('ideasUsageText').textContent = state.isPro ? '∞ Unlimited' : `${state.usage.ideas}/5`;
+  document.getElementById('hooksUsageText').textContent = state.isPro ? '∞ Unlimited' : `${state.usage.hooks}/3`;
+  document.getElementById('captionsUsageText').textContent = state.isPro ? '∞ Unlimited' : `${state.usage.captions}/3`;
+
+  if (state.isPro) {
+    document.getElementById('planBadge').textContent = 'PRO';
+    document.getElementById('planBadge').className = 'plan-badge pro';
+    document.getElementById('upgradeBtn').style.display = 'none';
+  }
+
+  calculateScore();
+}
+
+function toggleHinglish() {
+  state.hinglish = document.getElementById('hinglishToggle').checked;
+  saveState();
+  showToast(state.hinglish ? '🇮🇳 Hinglish mode ON!' : 'English mode ON!', 'success');
+}
+
+function saveApiKey() {
+  const key = document.getElementById('settingsApiKey').value.trim();
+  if (key) { state.apiKey = key; saveState(); showToast('API key saved!', 'success'); }
+}
+
+function saveProfile() {
+  state.userName = document.getElementById('settingsName').value.trim() || state.userName;
+  state.primaryNiche = document.getElementById('settingsNiche').value;
+  saveState();
+  updateDashboard();
+  showToast('Profile saved!', 'success');
+}
+
+function saveRzpKey() {
+  const key = document.getElementById('rzpKeyInput').value.trim();
+  if (key) { state.rzpKey = key; saveState(); showToast('Razorpay key saved!', 'success'); }
+}
+
+function resetApp() {
+  if (confirm('Sab data delete ho jaega. Sure ho?')) {
+    localStorage.removeItem('prachigen_state');
+    location.reload();
+  }
+}
+
+// ========================
+// INIT
+// ========================
+window.onload = function() {
+  loadState();
+
+  if (state.apiKey) {
+    document.getElementById('setupModal').style.display = 'none';
+    updateDashboard();
+    loadTrendingNiche();
+    document.getElementById('hinglishToggle').checked = state.hinglish;
+    // Pre-fill settings
+    document.getElementById('settingsApiKey').value = state.apiKey;
+    document.getElementById('settingsName').value = state.userName;
+    if (state.rzpKey) document.getElementById('rzpKeyInput').value = state.rzpKey;
+  }
+};
+</script>
+
+<!-- Load Razorpay Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</body>
+</html>
